@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="vacancy-data">
+
+    </div>
+
+    <script>
+        let dom = document.getElementById("vacancy-data")
+
+        function CreateTable(table_name = String) {
+            let table = document.createElement("table")
+            let row = document.createElement("tr")
+            let header = document.createElement("th")
+            let th = document.createElement('h1')
+
+            th.innerText = table_name
+            header.appendChild(th)
+            row.appendChild(header)
+            table.appendChild(row)
+
+            return table
+        }
+
+        function AddData(table, counter, heading = String, location = String) {
+            let row = document.createElement("tr")
+            let td = document.createElement("td")
+
+            let div = document.createElement("div")
+
+            let head = document.createElement("h4")
+            head.innerText = counter + '. ' + heading
+
+            let data = document.createElement("p")
+            data.innerText = location
+
+            div.appendChild(head)
+            div.appendChild(data)
+
+            row.appendChild(div)
+            table.appendChild(row)
+            dom.appendChild(table)
+        }
+
+        // TopJobs
+        fetch('https://topjobs.lk/applicant/vacancybyfunctionalarea.jsp?FA=SDQ').then((data) => {
+            let table = CreateTable("TopJobs")
+            let counter = 1
+
+            data.text().then((html) => {
+                let domparser = new DOMParser()
+                let doc = domparser.parseFromString(html, 'text/html')
+
+                doc.querySelectorAll("#table>tbody>tr").forEach((value, key, parent) => {
+                    let date = value.querySelector("td:nth-child(5)").innerHTML
+                    let date_string = String(date).trim()
+                    let current_date = new Date().toDateString()
+                    if (date_string === current_date) {
+                        let heading = value.querySelector("td:nth-child(3)>h2>span").innerHTML
+                        let location = value.querySelector("td:nth-child(3)>h1").innerHTML
+
+                        AddData(table, counter, heading, location)
+                        counter++
+                    } else {
+                        return null
+                    }
+                })
+            })
+        })
+
+        // DevJobs
+        fetch('https://www.devjobs.lk/').then((data) => {
+            let table = CreateTable("DevJobs")
+            let counter = 1
+
+            data.text().then((html) => {
+                let domparser = new DOMParser()
+                let doc = domparser.parseFromString(html, 'text/html')
+
+                doc.querySelectorAll(".container>.row>main>div>div>div").forEach((value, key, parent) => {
+                    let date = value.querySelector("div>a>div>div>div>div:nth-child(4)>small")
+                    if (date !== null) {
+                        let is_today = String(date.innerHTML).includes('h')
+
+                        if (is_today) {
+                            let query = value.querySelector("div>a>div>div>div>div:nth-child(2)")
+
+                            if (query !== null) {
+                                let position = query.querySelector("h5").innerText
+                                let position_text = String(position).trim()
+                                let company = query.querySelector("div>p").innerText
+
+                                AddData(table, counter, position_text, company)
+                                counter++
+                            }
+                        }
+                    }
+                })
+            })
+        })
+
+    </script>
+</body>
+
+</html>
